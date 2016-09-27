@@ -38,7 +38,7 @@ class GetPost(object):
 
         return group_list
     
-    def get_post_info(self, page_url, user_id):
+    def get_post_info(self, page_url, user_id, html_file):
         
         r = self.session.get(page_url)
         html = r.text
@@ -62,9 +62,11 @@ class GetPost(object):
                 time_tag = each_post.find('td', {'class': 'time'})
                 time = time_tag.get_text()
 
-                return (url, title, time)
+                html_str = '<a href="%s" target="_blank">%s</a>\t发表于：%s' % (url, title, time)
+                html_file.write(html_str)
+                html_file.flush()
             else:
-                return None
+                continue
 
 
 
@@ -95,7 +97,7 @@ if __name__ == '__main__':
     print('该用户共加入了%s个小组' % group_num)
 
     # 指定查询多少个小组
-    num = int(input('你想查询多少个小组（数量应少于%s)：' % group_num))
+    num = int(input('你想查询多少个小组（数量应在0－%s之间)：' % group_num))
 
     # 限定查询的页数
     page_num = int(input('你想在该小组中查询多少页：'))
@@ -114,15 +116,10 @@ if __name__ == '__main__':
             print('\t正在查找第%s页' % str(j+1))
             url = group_url_list[i] + 'discussion?start=' + str(25 * j)
             
-            # 返回匹配的帖子链接、标题和发表时间
-            post_info = gp.get_post_info(url, douban_id)
 
-            # 如果找到了，就写入HTML文件中
-            if post_info is not None:
-                html_str = '<a href="%s" target="_blank">%s</a>\t发表于：%s' % (post_info[0], post_info[1], post_info[2])
-                html_file.write(html_str)
-                html_file.flush()
-            else:
-                continue
+            # 执行查找
+            gp.get_post_info(url, douban_id, html_file)
+
     else:
+        html_file.close()
         print('查找完成！')
