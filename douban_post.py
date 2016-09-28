@@ -29,18 +29,37 @@ class GetPost(object):
         
         # 查找结果将保存在group_list列表中
         group_list = []
+        group_dict = dict()
 
         li_tags = bsObj.find('div', {'class': 'group-list group-cards'}).findAll('li')
         for each_li in li_tags:
-            title_div = each_li.find('a')
+            title_div = each_li.find('div', {"class": "title"}).find('a')
+            title = title_div.attrs['title']
             url = title_div.attrs['href']
             group_list.append(url)
+            group_dict[url] = title
 
-        return group_list
+        return (group_list, group_dict)
     
     def get_post_info(self, page_url, user_id, html_file):
         
         r = self.session.get(page_url)
+        
+        # 豆瓣有反爬虫机制，会在抓取一段时间后要求输入验证码
+        # 此时程序已经被重定向到一个403页面
+        if r.status_code == 403:
+            # 获取验证码
+            preload = dict()
+            captcha_bs = bs(r.text, 'lxml')
+            post_form = captcha_bs.find('form', {'action': '/misc/sorry'})
+            preload['ck'] = post_form.find(name='ck').attrs['value']
+            captcha_url = post_form.find('img', {'alt': 'captcha'}).attrs['src']
+            preload['captcha_solution'] = input('输入验证码：%s' % captcha_url)
+            preload['captcha_id'] = post_form.find(name='captcha-id').attrs['value']
+            preload['original-url'] = page_url
+            r = self.session.post('http://www.douban.com/misc/sorry', data=preload)
+
+
         html = r.text
 
         bsObj = bs(html, 'lxml')
@@ -57,12 +76,13 @@ class GetPost(object):
                 title_tag = each_post.find('td', {'class': 'title'}).find('a')
                 url = title_tag.attrs['href']
                 title = title_tag.get_text()
+                print('发现帖子：%s' % title)
 
                 # 获取发表时间
                 time_tag = each_post.find('td', {'class': 'time'})
                 time = time_tag.get_text()
 
-                html_str = '<a href="%s" target="_blank">%s</a>\t发表于：%s' % (url, title, time)
+                html_str = '<a href="%s" target="_blank">%s</a>\t发表于：%s<br />' % (url, title, time)
                 html_file.write(html_str)
                 html_file.flush()
             else:
@@ -89,7 +109,7 @@ if __name__ == '__main__':
     # 将其传入对应的类方法中
     # 返回一个列表
     joined_group_url = input('输入该用户加入的小组页面URL：')
-    group_url_list = gp.get_group_list(joined_group_url)
+    group_url_list, group_url_dict = gp.get_group_list(joined_group_url)
 
     # 显示该用户共加入了多少个小组
     # 以方便只在TA最活跃的N个小组中的发言
@@ -100,7 +120,7 @@ if __name__ == '__main__':
     num = int(input('你想查询多少个小组（数量应在0－%s之间)：' % group_num))
 
     # 限定查询的页数
-    page_num = int(input('你想在该小组中查询多少页：'))
+    page_num = int(input('你想在各小组中查询多少页：'))
 
     # 用两个循环
     # 外循环用于历遍小组链接
@@ -111,14 +131,17 @@ if __name__ == '__main__':
     html_file = open('post.html', 'a', encoding='utf-8')
 
     for i in range(num):
-        print('正在查询第%s个小组' % str(i+1))
+        print('正在查询第%s个小组：%s' % (str(i+1), group_url_dict[group_url_list[i]]))
         for j in range(page_num):
             print('\t正在查找第%s页' % str(j+1))
             url = group_url_list[i] + 'discussion?start=' + str(25 * j)
             
 
             # 执行查找
-            gp.get_post_info(url, douban_id, html_file)
+            try:
+                gp.get_post_info(url, douban_id, html_file)
+            except:
+                pass
 
     else:
         html_file.close()
