@@ -23,6 +23,7 @@ def login_douban(username, password):
     r = session.get('https://www.douban.com/accounts/login')
     # 豆瓣有反爬虫机制，会在抓取一段时间后要求输入验证码
     # 此时程序已经被重定向到一个403页面
+    # 不过目前这段程序好像实现不了预期效果
     test_html = r.text
     test_bo = BeautifulSoup(test_html, 'lxml')
     title = test_bo.title.string
@@ -56,7 +57,6 @@ def login_douban(username, password):
 
 
     main_page = session.post(login_url, headers=headers, data=preload)
-    t = session.get('https://www.douban.com/people/92549523/')
     try:
         main_page.raise_for_status()
     except Exception as e:
