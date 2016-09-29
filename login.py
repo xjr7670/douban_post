@@ -25,7 +25,6 @@ def login_douban(username, password):
     # 此时程序已经被重定向到一个403页面
     test_html = r.text
     test_bo = BeautifulSoup(test_html, 'lxml')
-    print(test_html)
     title = test_bo.title.string
     if title == '禁止访问':
         # 获取验证码
@@ -66,4 +65,4 @@ def login_douban(username, password):
     return session
 
 if __name__ == '__main__':
-    login_douban('xjr30226@126.com', 'x45668668')
+    login_douban(username, password)
