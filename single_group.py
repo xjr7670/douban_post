@@ -101,9 +101,16 @@ if __name__ == '__main__':
     
     html_file = open('post.html', 'a')
 
+    pre_url = re.sub('\d+', '', group_url)
+
     for i in range(find_num):
-        url = 'https://www.douban.com/group/gz/discussion?start=%s' % str(i*25)
-        gp.get_post_info(douban_id, url, html_file)
+        print("正在查找第%d页" % int(i+1))
+        url = pre_url + str(i*25)
+        try:
+            gp.get_post_info(douban_id, url, html_file)
+        except:
+            print("第%d页查找失败，跳过" % int(i+1))
+            continue
         sleep(5)
     else:
         html_file.close()
