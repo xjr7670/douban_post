@@ -5,7 +5,6 @@
   作者：老贤
   本程序主要实现三个功能：
   1. 登录豆瓣（反反爬虫）
-  2. 提取指定用户所加入的所有小组的链接
   3. 提取指定用户在指定小组中的发言
   由于第3个使用的是豆瓣ID来判断的，而豆瓣ID并不是唯一的
   所有存在一定的误差
@@ -15,6 +14,8 @@ import requests
 from bs4 import BeautifulSoup as bs
 from login import login_douban
 from time import sleep
+
+import re
 
 
 class GetPost(object):
@@ -29,10 +30,11 @@ class GetPost(object):
         
         # 豆瓣有反爬虫机制，会在抓取一段时间后要求输入验证码
         # 此时程序已经被重定向到一个403页面
+        # 这个功能目前没有实现！！！！！___**___这里的代码没用的=_=
         if r.status_code == 403:
             # 获取验证码
             preload = dict()
-            captcha_bs = bs(r.text, 'lxml')
+            captcha_bs = bs(r.text, 'html.parser')
             post_form = captcha_bs.find('form', {'action': '/misc/sorry'})
             preload['ck'] = post_form.find(name='ck').attrs['value']
             captcha_url = post_form.find('img', {'alt': 'captcha'}).attrs['src']
@@ -44,7 +46,7 @@ class GetPost(object):
 
         html = r.text
 
-        bsObj = bs(html, 'lxml')
+        bsObj = bs(html, 'html.parser')
 
         post_list = bsObj.find('table', {"class": "olt"}).findAll('tr', {'class': ''})
         post_list.pop(0)
@@ -90,7 +92,7 @@ if __name__ == '__main__':
     group_url = input('输入组链接：')
     r = session.get(group_url)
     html = r.text
-    bsObj = bs(html, 'lxml')
+    bsObj = bs(html, 'html.parser')
 
     next_tag = bsObj.find('span', {"class": "next"})
     total_page = next_tag.previous_element.previous_element
