@@ -9,3 +9,15 @@
 
 可以使用pip来安装：
 	pip install requests bs4
+	
+## 只在一个组内查找
+
+```bash
+python single_group.py
+```
+
+### 查找用户在其加入的所有组的发言
+
+```bash
+python douban_post.py
+```
