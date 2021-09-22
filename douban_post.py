@@ -11,6 +11,7 @@
   所有存在一定的误差
 '''
 
+import time
 import requests
 from bs4 import BeautifulSoup as bs
 from login import login_douban
@@ -31,7 +32,12 @@ class GetPost(object):
         group_list = []
         group_dict = dict()
 
-        li_tags = bsObj.find('div', {'class': 'group-list group-cards'}).findAll('li')
+        gs = bsObj.findAll('div', {'class': 'group-list group-cards'})
+        assert len(gs) >= 1, print(html)
+        if len(gs) == 2:
+            li_tags = gs[1].findAll('li')
+        else:
+            li_tags = gs[0].findAll('li')
         for each_li in li_tags:
             title_div = each_li.find('div', {"class": "title"}).find('a')
             title = title_div.attrs['title']
@@ -140,8 +146,11 @@ if __name__ == '__main__':
             # 执行查找
             try:
                 gp.get_post_info(url, douban_id, html_file)
-            except:
+            except Exception e:
+                print(str(e))
                 pass
+
+            time.sleep(1)
 
     else:
         html_file.close()
