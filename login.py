@@ -10,10 +10,10 @@ def login_douban(username, password):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36',
     }
+    session.headers.update(headers)
 
     preload = {
         'source': 'None',
-        'redir': 'https://www.douban.com/people/92549523/',
         'form_email': username,
         'form_password': password,
         'remember': 'on',
@@ -59,6 +59,7 @@ def login_douban(username, password):
     main_page = session.post(login_url, headers=headers, data=preload)
     try:
         main_page.raise_for_status()
+        print('登录成功！')
     except Exception as e:
         print('登录失败！', e)
         return None
